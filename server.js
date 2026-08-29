@@ -77,6 +77,7 @@ app.post('/api/bakery', upload.single('image'), async (req, res) => {
 });
 
 // [UPDATE] แก้ไขข้อมูลขนม (เพิ่ม image_url เรียบร้อยแล้ว ✨)
+// [UPDATE] แก้ไขข้อมูลขนม
 app.put('/api/bakery/:id', (req, res) => {
     const { id } = req.params;
     const { name, category, price, description, image_url, is_available } = req.body;
@@ -87,7 +88,6 @@ app.put('/api/bakery/:id', (req, res) => {
         res.json({ message: '✏️ แก้ไขข้อมูลสำเร็จ!' });
     });
 });
-
 // [DELETE] ลบเมนูขนม
 app.delete('/api/bakery/:id', (req, res) => {
     const { id } = req.params;

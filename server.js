@@ -22,13 +22,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD, // 👈 แก้ตรงนี้เป็น DB_PASSWORD ให้ตรงกับบน Render
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 4000,
     ssl: {
-      rejectUnauthorized: true // 👈 เพิ่มบรรทัดนี้ลงไปเพื่อผ่าน SSL
+      rejectUnauthorized: true
     }
-  });
+});
 
 db.connect((err) => {
     if (err) console.error('❌ เชื่อมต่อ MySQL ไม่สำเร็จ:', err.message);
@@ -66,7 +66,7 @@ app.post('/api/bakery', upload.single('image'), async (req, res) => {
             finalImageUrl = result.secure_url;
         }
 
-        const sql = 'INSERT INTO bakery_items (name, category, price, description, image_url) VALUES (?, ?, ?, ?, ?)';
+        const sql = 'INSERT INTO bakery_items (name, category, price, description, image_url, is_available) VALUES (?, ?, ?, ?, ?, 1)';
         db.query(sql, [name, category, price, description, finalImageUrl], (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: '✨ เพิ่มเมนูขนมสำเร็จ!', id: result.insertId, image_url: finalImageUrl });
@@ -76,13 +76,13 @@ app.post('/api/bakery', upload.single('image'), async (req, res) => {
     }
 });
 
-// [UPDATE] แก้ไขข้อมูลขนม
+// [UPDATE] แก้ไขข้อมูลขนม (เพิ่ม image_url เรียบร้อยแล้ว ✨)
 app.put('/api/bakery/:id', (req, res) => {
     const { id } = req.params;
-    const { name, category, price, description, is_available } = req.body;
+    const { name, category, price, description, image_url, is_available } = req.body;
     
-    const sql = 'UPDATE bakery_items SET name=?, category=?, price=?, description=?, is_available=? WHERE id=?';
-    db.query(sql, [name, category, price, description, is_available, id], (err, result) => {
+    const sql = 'UPDATE bakery_items SET name=?, category=?, price=?, description=?, image_url=?, is_available=? WHERE id=?';
+    db.query(sql, [name, category, price, description, image_url || '', is_available || 1, id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: '✏️ แก้ไขข้อมูลสำเร็จ!' });
     });

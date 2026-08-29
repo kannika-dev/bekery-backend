@@ -18,13 +18,17 @@ cloudinary.config({
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 2. เชื่อมต่อ MySQL ใน XAMPP
+// 2. เชื่อมต่อ MySQL (TiDB Cloud)
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-});
+    password: process.env.DB_PASSWORD, // 👈 แก้ตรงนี้เป็น DB_PASSWORD ให้ตรงกับบน Render
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 4000,
+    ssl: {
+      rejectUnauthorized: true // 👈 เพิ่มบรรทัดนี้ลงไปเพื่อผ่าน SSL
+    }
+  });
 
 db.connect((err) => {
     if (err) console.error('❌ เชื่อมต่อ MySQL ไม่สำเร็จ:', err.message);

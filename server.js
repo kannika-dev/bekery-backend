@@ -55,33 +55,43 @@ app.get('/api/bakery', (req, res) => {
 // [CREATE] เพิ่มขนมใหม่
 app.post('/api/bakery', upload.single('image'), async (req, res) => {
     try {
-        const { name, category, price, description, image_url } = req.body;
-        let finalImageUrl = image_url || '';
-
-        if (req.file) {
-            const result = await new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    { folder: 'bakery_items' },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                stream.end(req.file.buffer);
-            });
-            finalImageUrl = result.secure_url;
-        }
-
-        const sql = 'INSERT INTO bakery_items (name, category, price, description, image_url, is_available) VALUES (?, ?, ?, ?, ?, 1)';
-        db.query(sql, [name, category, price, description, finalImageUrl], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: '✨ เพิ่มเมนูขนมสำเร็จ!', id: result.insertId, image_url: finalImageUrl });
+      const { name, category, price, description, image_url } = req.body;
+      let finalImageUrl = image_url || '';
+  
+      if (req.file) {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'bakery_items' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
         });
+        finalImageUrl = result.secure_url;
+      }
+  
+      // ป้องกันค่า undefined ให้เป็น string หรือค่าเริ่มต้น
+      const safeName = name || '';
+      const safeCategory = category || 'General';
+      const safePrice = parseFloat(price) || 0;
+      const safeDescription = description || '';
+  
+      const sql = 'INSERT INTO bakery_items (name, category, price, description, image_url, is_available) VALUES (?, ?, ?, ?, ?, 1)';
+      
+      db.query(sql, [safeName, safeCategory, safePrice, safeDescription, finalImageUrl], (err, result) => {
+        if (err) {
+          console.error('SQL Error:', err.message);
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: '✨ เพิ่มเมนูขนมสำเร็จ!', id: result.insertId, image_url: finalImageUrl });
+      });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      console.error('Server Catch Error:', error.message);
+      res.status(500).json({ error: error.message });
     }
-});
-
+  });
 // [UPDATE] แก้ไขข้อมูลขนม (เพิ่ม image_url เรียบร้อยแล้ว ✨)
 // [UPDATE] แก้ไขข้อมูลขนม
 app.put('/api/bakery/:id', (req, res) => {
